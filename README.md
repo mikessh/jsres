@@ -1,8 +1,7 @@
 ### Description
 
 A java-based implementation of Stochastic Ranking Evolutionary Strategy (SRES). 
-In a nutshell, this is a heuristic algorithm that finds a set of parameters ``Xi`` that minimize/maximize a given function's value (objective) ``F(Xi)`` and does not violate the constraints specified in 
-for of ``Gk(Xi)<=0`` inequalities.
+In a nutshell, this is a heuristic algorithm that finds a set of parameters ``Xi`` that minimize/maximize the value of a given function aka objective ``F(Xi)`` and does not violate the constraints specified in form of ``Gk(Xi)<=0`` inequalities.
 For more details, please see the [Runarsson TP and Yao X paper](https://notendur.hi.is/~tpr/software/sres/Tec311r.pdf) which has served as a basis for implementation of this algorithm. In my experience, this is one of the best algorithms 
 for solving real multivariate objective function constrained optimization problems. Note that this implementation is optimized by calculating the objective and constraints in parallel over the population of evolving solutions.
 
