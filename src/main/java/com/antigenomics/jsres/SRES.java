@@ -149,7 +149,7 @@ public final class SRES {
 
     public class Solution {
         private final double[] features, mutationRates;
-        private double fitness, penalty;
+        private Objective.Result objectiveResult = null;
 
         Solution() {
             this.features = new double[numberOfFeatures];
@@ -165,12 +165,16 @@ public final class SRES {
             return features;
         }
 
-        public double getFitness() {
-            return fitness;
+        public Objective.Result getObjectiveResult() {
+            return objectiveResult;
         }
 
-        public double getPenalty() {
-            return penalty;
+        double getFitness() {
+            return objectiveResult.getValue();
+        }
+
+        double getPenalty() {
+            return objectiveResult.getPenalty();
         }
 
         Solution generateOffspring(double[] sampledMutationRates) {
@@ -203,9 +207,7 @@ public final class SRES {
         }
 
         void evaluate() {
-            Objective.Result result = objective.evaluate(features);
-            fitness = result.getValue();
-            penalty = result.getPenalty();
+            objectiveResult = objective.evaluate(features);
         }
     }
 }

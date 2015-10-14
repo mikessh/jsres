@@ -64,14 +64,17 @@ public abstract class Objective {
 
     public static class Result {
         private final double value, penalty;
+        private final double[] constraintValues;
 
         public Result(double value) {
             this.value = value;
+            this.constraintValues = new double[0];
             this.penalty = 0;
         }
 
         public Result(double value, double[] constraintValues) {
             this.value = value;
+            this.constraintValues = constraintValues;
             double penalty = 0;
             for (double p : constraintValues) {
                 double pp = Math.max(0, p);
@@ -80,11 +83,15 @@ public abstract class Objective {
             this.penalty = penalty;
         }
 
+        public double[] getConstraintValues() {
+            return constraintValues;
+        }
+
         public double getValue() {
             return value;
         }
 
-        public double getPenalty() {
+        double getPenalty() {
             return penalty;
         }
     }
