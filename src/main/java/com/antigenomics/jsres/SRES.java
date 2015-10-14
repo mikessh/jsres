@@ -16,6 +16,7 @@
 
 package com.antigenomics.jsres;
 
+import java.util.Arrays;
 import java.util.Random;
 
 public final class SRES {
@@ -120,12 +121,7 @@ public final class SRES {
         }
 
         public void evaluate() {
-            // todo: parallel
-            for (Individual individual : individuals) {
-                Objective.Result result = objective.compute(individual.features);
-                individual.setFitness(result.getValue());
-                individual.setPenalty(result.getPenalty());
-            }
+            Arrays.stream(individuals).parallel().forEach(Individual::evaluate);
         }
 
         private void swap(int i, int j) {
@@ -165,14 +161,6 @@ public final class SRES {
             return penalty;
         }
 
-        public void setFitness(double fitness) {
-            this.fitness = fitness;
-        }
-
-        public void setPenalty(double penalty) {
-            this.penalty = penalty;
-        }
-
         public Individual generateOffspring(double[] sampledMutationRates) {
             Individual offspring = new Individual();
 
@@ -200,6 +188,12 @@ public final class SRES {
             }
 
             return offspring;
+        }
+
+        public void evaluate() {
+            Objective.Result result = objective.compute(features);
+            fitness = result.getValue();
+            penalty = result.getPenalty();
         }
     }
 }
