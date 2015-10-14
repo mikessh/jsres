@@ -45,112 +45,124 @@ public final class SRES {
         this.rankingPenalizationFactor = rankingPenalizationFactor;
     }
 
-    public Population run(int numberOfGenerations) {
-        Population population = new Population();
-
-        for (int i = 0; i < numberOfGenerations; i++) {
-            population.evaluate();
-            population.sort();
-            population = population.evolve();
-        }
-
-        population.evaluate();
-
-        return population;
+    public SolutionSet run() {
+        return run(1750);
     }
 
-    public class Population {
-        private final Individual[] individuals;
+    public SolutionSet run(int numberOfGenerations) {
+        SolutionSet solutionSet = new SolutionSet();
 
-        public Population() {
-            this.individuals = new Individual[lambda];
+        for (int i = 0; i < numberOfGenerations; i++) {
+            solutionSet.evaluate();
+            solutionSet.sort();
+            solutionSet = solutionSet.evolve();
+        }
+
+        solutionSet.evaluate();
+        solutionSet.sort();
+
+        return solutionSet;
+    }
+
+    public class SolutionSet {
+        private final Solution[] solutions;
+
+        SolutionSet() {
+            this.solutions = new Solution[lambda];
             for (int i = 0; i < lambda; i++) {
-                individuals[i] = new Individual(objective.generateFeatureVector(), objective.getMutationRates());
+                solutions[i] = new Solution(objective.generateFeatureVector(), objective.getMutationRates());
             }
         }
 
-        public Population(Individual[] individuals) {
-            this.individuals = individuals;
+        SolutionSet(Solution[] solutions) {
+            this.solutions = solutions;
         }
 
-        public void sort() {
+        void sort() {
             for (int i = 0; i < numberOfSweeps; i++) {
                 boolean swapped = false;
                 for (int j = 0; j < lambda - 1; j++) {
                     double p = random.nextDouble(),
-                            p1 = individuals[j].getPenalty(),
-                            p2 = individuals[j + 1].getPenalty();
+                            p1 = solutions[j].getPenalty(),
+                            p2 = solutions[j + 1].getPenalty();
                     if (p < rankingPenalizationFactor || (p1 == 0 && p2 == 0)) {
-                        if (individuals[j].getFitness() > individuals[j + 1].getFitness()) {
+                        // no solution break constraints or penalization is not applied
+                        if (solutions[j].getFitness() > solutions[j + 1].getFitness()) {
                             swap(j, j + 1);
                             swapped = true;
                         }
                     } else if (p1 > p2) {
+                        // constraint penalization
                         swap(j, j + 1);
                         swapped = true;
                     }
                 }
                 if (!swapped) {
+                    // sorted
                     break;
                 }
             }
         }
 
-        public Population evolve() {
-            Individual[] newIndividuals = new Individual[lambda];
+        SolutionSet evolve() {
+            Solution[] newSolutions = new Solution[lambda];
 
             int j = 0;
             for (int i = 0; i < lambda; i++) {
-                // mutation rates are sampled from top individuals
+                // mutation rates are sampled from top solutions
                 double[] sampledMutationRates = new double[numberOfFeatures];
 
                 for (int k = 0; k < numberOfFeatures; k++) {
-                    sampledMutationRates[k] = individuals[random.nextInt(mu)].getMutationRate(k);
+                    sampledMutationRates[k] = solutions[random.nextInt(mu)].mutationRates[k];
                 }
 
                 // top individual generates offspring
-                newIndividuals[i] = individuals[j].generateOffspring(sampledMutationRates);
+                newSolutions[i] = solutions[j].generateOffspring(sampledMutationRates);
 
                 if (j++ > mu) {
-                    // cycle top mu individuals
+                    // cycle top mu solutions
                     j = 0;
                 }
             }
 
-            return new Population(newIndividuals);
+            return new SolutionSet(newSolutions);
         }
 
-        public void evaluate() {
-            Arrays.stream(individuals).parallel().forEach(Individual::evaluate);
+        void evaluate() {
+            Arrays.stream(solutions).parallel().forEach(Solution::evaluate);
         }
 
         private void swap(int i, int j) {
-            Individual tmp = individuals[i];
-            individuals[i] = individuals[j];
-            individuals[j] = tmp;
+            Solution tmp = solutions[i];
+            solutions[i] = solutions[j];
+            solutions[j] = tmp;
+        }
+
+        public Solution[] getSolutions() {
+            return solutions;
+        }
+
+        public Solution getBestSolution() {
+            return solutions[0];
         }
     }
 
-    public class Individual {
+    public class Solution {
         private final double[] features, mutationRates;
         private double fitness, penalty;
 
-        public Individual() {
+        Solution() {
             this.features = new double[numberOfFeatures];
             this.mutationRates = new double[numberOfFeatures];
         }
 
-        public Individual(double[] features, double[] mutationRates) {
+        Solution(double[] features, double[] mutationRates) {
             this.features = features;
             this.mutationRates = mutationRates;
         }
 
-        public double getFeature(int index) {
-            return features[index];
-        }
-
-        public double getMutationRate(int index) {
-            return mutationRates[index];
+        public double[] getFeatures() {
+            return features;
         }
 
         public double getFitness() {
@@ -161,8 +173,8 @@ public final class SRES {
             return penalty;
         }
 
-        public Individual generateOffspring(double[] sampledMutationRates) {
-            Individual offspring = new Individual();
+        Solution generateOffspring(double[] sampledMutationRates) {
+            Solution offspring = new Solution();
 
             double globalLearningRate = tauDash * random.nextGaussian();
 
@@ -190,8 +202,8 @@ public final class SRES {
             return offspring;
         }
 
-        public void evaluate() {
-            Objective.Result result = objective.compute(features);
+        void evaluate() {
+            Objective.Result result = objective.evaluate(features);
             fitness = result.getValue();
             penalty = result.getPenalty();
         }

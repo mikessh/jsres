@@ -54,10 +54,9 @@ public abstract class Objective {
 
     public final boolean inBounds(double feature, int index) {
         return featureLowerBounds[index] <= feature && feature <= featureUpperBounds[index];
-
     }
 
-    public abstract Result compute(double[] features);
+    public abstract Result evaluate(double[] features);
 
     public final int getNumberOfFeatures() {
         return numberOfFeatures;
@@ -65,6 +64,11 @@ public abstract class Objective {
 
     public static class Result {
         private final double value, penalty;
+
+        public Result(double value) {
+            this.value = value;
+            this.penalty = 0;
+        }
 
         public Result(double value, double[] constraintValues) {
             this.value = value;
