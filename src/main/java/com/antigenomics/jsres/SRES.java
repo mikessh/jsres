@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Random;
 
 /**
- * A class that implements Stocastic Ranking Evolution Strategy (SRES),
+ * A class that implements Stocastic Ranking Evolutionary Strategy (SRES),
  * an evolutionary algorithm for constrained optimization of real multivariate objective functions.
  * User should provide an objective function instance inherited from abstract {@link com.antigenomics.jsres.Objective} class.
  * The algorithm is executed via {@link #run} method. Objective function evaluation is optimized by implementing
@@ -91,7 +91,7 @@ public final class SRES {
      * @return a sorted (from best to worst) set of solutions obtained after running the algorithm
      */
     public SolutionSet run() {
-        return run(1000);
+        return run(defaultNumberOfGenerations);
     }
 
     /**
@@ -298,6 +298,7 @@ public final class SRES {
 
         /**
          * Gets the fitness of this solution.
+         *
          * @return {@code value} of objective function for maximization problem, {@code -value} for minimization problem
          * @see com.antigenomics.jsres.Objective.Result#getValue
          */
@@ -307,17 +308,19 @@ public final class SRES {
         }
 
         /**
-         * Gets the penalty value of this solution. 
+         * Gets the penalty value of this solution.
+         *
          * @return penalty value, sum of squares of constraint values for constraints that are violated
-         * @see com.antigenomics.jsres.Objective.Result#getPenalty 
+         * @see com.antigenomics.jsres.Objective.Result#getPenalty
          */
         double getPenalty() {
             return objectiveResult.getPenalty();
         }
 
         /**
-         * Generates an offspring for this solution. Mutation rates are recombined and 
+         * Generates an offspring for this solution. Mutation rates are recombined and
          * applied to randomly mutate the feature vector.
+         *
          * @param sampledMutationRates random sample of mutation rates from top {@link #mu} solutions for recombination
          * @return a recombined and mutated offspring
          */
@@ -354,7 +357,7 @@ public final class SRES {
         }
 
         /**
-         * Evaluates given solution using objective function and constraints specified in parent {@code SRES} algorithm. 
+         * Evaluates given solution using objective function and constraints specified in parent {@code SRES} algorithm.
          */
         void evaluate() {
             objectiveResult = objective.evaluate(features);
