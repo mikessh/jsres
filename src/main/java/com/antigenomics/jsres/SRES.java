@@ -210,6 +210,7 @@ public final class SRES {
                 double newMutationRate = (mutationRates[i] + sampledMutationRates[i]) / 2 *
                         // lognormal update for mutation rates
                         Math.exp(globalLearningRate + tau * random.nextGaussian());
+                // important: prevent mutation rates from growing to infinity
                 offspring.mutationRates[i] = Math.min(newMutationRate, mutationRateConstraints[i]);
                 // generate offspring features
                 offspring.features[i] = features[i]; // in case fail to bound

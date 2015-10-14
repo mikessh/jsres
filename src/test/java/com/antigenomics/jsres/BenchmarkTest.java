@@ -43,7 +43,7 @@ public class BenchmarkTest {
     public static abstract class TestProblem extends Objective {
         private static final double EPS = 1e-16;
         private final double valueAtSolution;
-        private final double precision;
+        private final double absolutePrecision, relativePrecision;
         private final int allowedViolatedConstraintsCount;
 
         public TestProblem(double[] featureUpperBounds, double[] featureLowerBounds, boolean maximizationProblem,
@@ -55,14 +55,16 @@ public class BenchmarkTest {
         public TestProblem(double[] featureUpperBounds, double[] featureLowerBounds, boolean maximizationProblem,
                            double valueAtSolution, int allowedViolatedConstraintsCount) {
             this(featureUpperBounds, featureLowerBounds, maximizationProblem,
-                    valueAtSolution, allowedViolatedConstraintsCount, 0.01);
+                    valueAtSolution, allowedViolatedConstraintsCount, 1e-6, 1e-3);
         }
 
         public TestProblem(double[] featureUpperBounds, double[] featureLowerBounds, boolean maximizationProblem,
-                           double valueAtSolution, int allowedViolatedConstraintsCount, double precision) {
+                           double valueAtSolution, int allowedViolatedConstraintsCount,
+                           double absolutePrecision, double relativePrecision) {
             super(featureUpperBounds, featureLowerBounds, maximizationProblem);
             this.valueAtSolution = valueAtSolution;
-            this.precision = precision;
+            this.absolutePrecision = absolutePrecision;
+            this.relativePrecision = relativePrecision;
             this.allowedViolatedConstraintsCount = allowedViolatedConstraintsCount;
         }
 
@@ -77,11 +79,11 @@ public class BenchmarkTest {
                 }
             }
 
-            double relativeError = 2 * Math.abs(valueAtSolution - result.getValue()) /
-                    (valueAtSolution + result.getValue() + EPS);
+            double absoluteError = Math.abs(valueAtSolution - result.getValue()),
+                    relativeError = absoluteError / (Math.abs(valueAtSolution) + EPS);
 
             return violatedConstraints <= allowedViolatedConstraintsCount &&
-                    relativeError < precision;
+                    absoluteError <= absolutePrecision && relativeError <= relativePrecision;
 
         }
     }
