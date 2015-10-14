@@ -111,7 +111,7 @@ public final class SRES {
                             swap(j, j + 1);
                             swapped = true;
                         }
-                    } else if (p1 < p2) {
+                    } else if (p1 > p2) {
                         // constraint penalization
                         swap(j, j + 1);
                         swapped = true;

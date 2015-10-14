@@ -21,6 +21,8 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
+import static java.lang.Math.*;
+
 public class BenchmarkTest {
     @Test
     public void bananaTest() {
@@ -52,6 +54,20 @@ public class BenchmarkTest {
                     sum += b * b;
                 }
                 return new Result(sum / N);
+            }
+        });
+    }
+
+    @Test
+    public void g08Test() {
+        testSres(200, new TestProblem(new double[]{0, 0}, new double[]{10, 10}, true, 0.095825) {
+            @Override
+            public Result evaluate(double[] features) {
+                double f = pow(sin(2 * PI * features[0]), 3) * sin(2 * PI * features[1]) /
+                        (features[0] * features[0] * features[0] * (features[0] + features[1])),
+                        g1 = features[0] * features[0] - features[1] + 1,
+                        g2 = 1 - features[0] + (features[1] - 4) * (features[1] - 4);
+                return new Result(f, new double[]{g1, g2});
             }
         });
     }
@@ -102,12 +118,12 @@ public class BenchmarkTest {
                 }
             }
 
-            double absoluteError = Math.abs(valueAtSolution - result.getValue()),
-                    relativeError = absoluteError / Math.abs(valueAtSolution);
+            double absoluteError = abs(valueAtSolution - result.getValue()),
+                    relativeError = absoluteError / abs(valueAtSolution);
 
             return violatedConstraints <= allowedViolatedConstraintsCount &&
                     absoluteError <= absolutePrecision &&
-                    (Math.abs(valueAtSolution) < relativePrecision || relativeError <= relativePrecision);
+                    (abs(valueAtSolution) < relativePrecision || relativeError <= relativePrecision);
 
         }
     }
