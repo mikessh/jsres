@@ -27,15 +27,22 @@ public final class SRES {
     private final double tau, tauDash, rankingPenalizationFactor;
     private final int lambda, mu, numberOfFeatures, numberOfSweeps;
 
+    private final boolean verbose;
+
     public SRES(Objective objective) {
-        this(objective, 200, 30, 1.0, 200, 0.45);
+        this(objective, true);
     }
 
-    public SRES(Objective objective,
+    public SRES(Objective objective, boolean verbose) {
+        this(objective, verbose, 200, 30, 1.0, 200, 0.45);
+    }
+
+    public SRES(Objective objective, boolean verbose,
                 int lambda, int mu,
                 double expectedConvergenceRate,
                 int numberOfSweeps, double rankingPenalizationFactor) {
         this.objective = objective;
+        this.verbose = verbose;
         this.numberOfFeatures = objective.getNumberOfFeatures();
         this.lambda = lambda;
         this.mu = mu;
@@ -55,11 +62,24 @@ public final class SRES {
         for (int i = 0; i < numberOfGenerations; i++) {
             solutionSet.evaluate();
             solutionSet.sort();
+
+            if (verbose && i % 100 == 0) {
+                Solution bestSolution = solutionSet.getBestSolution();
+                System.out.println("SRES ran for " + i + " generations, best solution fitness is " +
+                        bestSolution.getFitness() + ", penalty is " + bestSolution.getPenalty());
+            }
+
             solutionSet = solutionSet.evolve();
         }
 
         solutionSet.evaluate();
         solutionSet.sort();
+
+        if (verbose) {
+            Solution bestSolution = solutionSet.getBestSolution();
+            System.out.println("SRES finished, best solution fitness is " +
+                    bestSolution.getFitness() + ", penalty is " + bestSolution.getPenalty());
+        }
 
         return solutionSet;
     }
@@ -87,11 +107,11 @@ public final class SRES {
                             p2 = solutions[j + 1].getPenalty();
                     if (p < rankingPenalizationFactor || (p1 == 0 && p2 == 0)) {
                         // no solution break constraints or penalization is not applied
-                        if (solutions[j].getFitness() > solutions[j + 1].getFitness()) {
+                        if (solutions[j].getFitness() < solutions[j + 1].getFitness()) {
                             swap(j, j + 1);
                             swapped = true;
                         }
-                    } else if (p1 > p2) {
+                    } else if (p1 < p2) {
                         // constraint penalization
                         swap(j, j + 1);
                         swapped = true;
@@ -170,7 +190,8 @@ public final class SRES {
         }
 
         double getFitness() {
-            return objectiveResult.getValue();
+            return objectiveResult.getObjective().isMaximizationProblem() ?
+                    objectiveResult.getValue() : -objectiveResult.getValue();
         }
 
         double getPenalty() {
@@ -182,12 +203,14 @@ public final class SRES {
 
             double globalLearningRate = tauDash * random.nextGaussian();
 
+            double[] mutationRateConstraints = objective.getMutationRates();
+
             for (int i = 0; i < numberOfFeatures; i++) {
                 // global intermediate recombination for mutation rates
                 double newMutationRate = (mutationRates[i] + sampledMutationRates[i]) / 2 *
                         // lognormal update for mutation rates
                         Math.exp(globalLearningRate + tau * random.nextGaussian());
-                offspring.mutationRates[i] = newMutationRate;
+                offspring.mutationRates[i] = Math.min(newMutationRate, mutationRateConstraints[i]);
                 // generate offspring features
                 offspring.features[i] = features[i]; // in case fail to bound
 
@@ -208,6 +231,12 @@ public final class SRES {
 
         void evaluate() {
             objectiveResult = objective.evaluate(features);
+        }
+
+        @Override
+        public String toString() {
+            return "SOLUTION " + Arrays.toString(features) + ",fitness is " + getFitness() + ", penalty is " +
+                    getPenalty() + "\n" + objectiveResult.toString();
         }
     }
 }
