@@ -19,11 +19,12 @@ package com.antigenomics.jsres;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 public class BenchmarkTest {
     @Test
     public void bananaTest() {
-        testSres(new TestProblem(new double[]{-10, -10},
-                new double[]{10, 10}, false, 0) {
+        testSres(100, new TestProblem(new double[]{-10, -10}, new double[]{10, 10}, false, 0) {
             @Override
             public Result evaluate(double[] features) {
                 double a = (1 - features[0]), b = 10 * (features[1] - features[0] * features[0]);
@@ -32,16 +33,38 @@ public class BenchmarkTest {
         });
     }
 
-    public void testSres(TestProblem testProblem) {
+    @Test
+    public void moreBananaTest() {
+        int N = 10;
+        double[] lowerBounds = new double[N],
+                upperBounds = new double[N];
+
+        Arrays.setAll(lowerBounds, value -> -10);
+        Arrays.setAll(upperBounds, value -> 10);
+
+        testSres(5000, new TestProblem(lowerBounds, upperBounds, false, 0) {
+            @Override
+            public Result evaluate(double[] features) {
+                double sum = 0;
+                for (int i = 0; i < features.length - 1; i++) {
+                    double a = (1 - features[i]), b = 10 * (features[i + 1] - features[i] * features[i]);
+                    sum += a * a;
+                    sum += b * b;
+                }
+                return new Result(sum / N);
+            }
+        });
+    }
+
+    public void testSres(int numberOfGenerations, TestProblem testProblem) {
         SRES sres = new SRES(testProblem);
-        SRES.Solution solution = sres.run().getBestSolution();
+        SRES.Solution solution = sres.run(numberOfGenerations).getBestSolution();
         System.out.println(solution.toString());
         Assert.assertTrue("Problem is solved up to required precision and constraint violation rules.",
                 testProblem.isSolved(solution));
     }
 
     public static abstract class TestProblem extends Objective {
-        private static final double EPS = 1e-16;
         private final double valueAtSolution;
         private final double absolutePrecision, relativePrecision;
         private final int allowedViolatedConstraintsCount;
@@ -80,10 +103,11 @@ public class BenchmarkTest {
             }
 
             double absoluteError = Math.abs(valueAtSolution - result.getValue()),
-                    relativeError = absoluteError / (Math.abs(valueAtSolution) + EPS);
+                    relativeError = absoluteError / Math.abs(valueAtSolution);
 
             return violatedConstraints <= allowedViolatedConstraintsCount &&
-                    absoluteError <= absolutePrecision && relativeError <= relativePrecision;
+                    absoluteError <= absolutePrecision &&
+                    (Math.abs(valueAtSolution) < relativePrecision || relativeError <= relativePrecision);
 
         }
     }
