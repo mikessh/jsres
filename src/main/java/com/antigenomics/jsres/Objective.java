@@ -18,12 +18,26 @@ package com.antigenomics.jsres;
 
 import java.util.Arrays;
 
+/**
+ * A class representing a real multivariate objective function and constraints that are subject to
+ * optimization. The objective function @{link #evaluate} method is left for the user to specify.
+ * Arbitrary value range is allowed for objective function. Constraints are provided as
+ * {@code constraint_value <= 0} inequalities, the computation of {@code constraint_value} array
+ * should be implemented by user.
+ */
 public abstract class Objective {
     private final int numberOfFeatures;
     private final double[] featureLowerBounds, featureUpperBounds;
     private final double[] mutationRates;
     private final boolean maximizationProblem;
 
+    /**
+     * Generates an objective function instance and specifies the feature (argument) space.
+     *
+     * @param featureLowerBounds  lower bounds of feature space
+     * @param featureUpperBounds  upper bounds of feature space
+     * @param maximizationProblem if set to true, the objective function is subject to maximization task, minimization will be performed otherwise
+     */
     protected Objective(double[] featureLowerBounds, double[] featureUpperBounds,
                         boolean maximizationProblem) {
         this.numberOfFeatures = featureLowerBounds.length;
@@ -47,7 +61,12 @@ public abstract class Objective {
         }
     }
 
-    public double[] generateFeatureVector() {
+    /**
+     * Generate a random feature array based on feature space constraints.
+     *
+     * @return a random array from feature space
+     */
+    double[] generateFeatureVector() {
         double[] features = new double[numberOfFeatures];
 
         for (int i = 0; i < numberOfFeatures; i++) {
@@ -58,34 +77,80 @@ public abstract class Objective {
         return features;
     }
 
-    public final double[] getMutationRates() {
+    /**
+     * Gets the mutation rates for {@link SRES} algorithm.
+     *
+     * @return an array of feature mutation rates
+     */
+    final double[] getMutationRates() {
         return mutationRates;
     }
 
-    public final boolean inBounds(double feature, int index) {
+    /**
+     * Check whether a given feature value belongs to feature space.
+     *
+     * @param feature feature value
+     * @param index   feature index
+     * @return true if feature value is in specified bounds, false otherwise
+     */
+    final boolean inBounds(double feature, int index) {
         return featureLowerBounds[index] <= feature && feature <= featureUpperBounds[index];
     }
 
+    /**
+     * A user-implemented function that computes the value of objective function and constraint values
+     * using provided features (parameters).
+     *
+     * @param features an array of objective function features
+     * @return objective function evaluation result
+     * @see com.antigenomics.jsres.Objective.Result
+     */
     public abstract Result evaluate(double[] features);
 
+    /**
+     * Gets the dimensionality of feature (parameter) space.
+     *
+     * @return length of feature arrays
+     */
     public final int getNumberOfFeatures() {
         return numberOfFeatures;
     }
 
+    /**
+     * Tells if the problem is maximization or minimization one.
+     *
+     * @return true for maximization task, false for minimization
+     */
     public boolean isMaximizationProblem() {
         return maximizationProblem;
     }
 
+    /**
+     * An object containing results of objective function and constraint evaluation.
+     */
     public class Result {
         private final double value, penalty;
         private final double[] constraintValues;
 
+        /**
+         * Creates a new instance of objective function evaluation result.
+         *
+         * @param value objective function value
+         */
         public Result(double value) {
             this.value = value;
             this.constraintValues = new double[0];
             this.penalty = 0;
         }
 
+        /**
+         * Creates a new instance of objective function evaluation result.
+         * Constraints should be re-written as {@code constraint_value <= 0} inequalities and
+         * {@code constraint_value} array should be provided.
+         *
+         * @param value            objective function value
+         * @param constraintValues constraint values
+         */
         public Result(double value, double[] constraintValues) {
             this.value = value;
             this.constraintValues = constraintValues;
@@ -97,22 +162,46 @@ public abstract class Objective {
             this.penalty = penalty;
         }
 
+        /**
+         * Get the array of constraint values.
+         *
+         * @return constraint value array
+         */
         public double[] getConstraintValues() {
             return constraintValues;
         }
 
+        /**
+         * Gets the objective function value.
+         *
+         * @return objective function value
+         */
         public double getValue() {
             return value;
         }
 
+        /**
+         * Gets the {@link SRES} penalty computed from objective values.
+         * Penalty value is computed as {@code sum(max(0, constraint_value)^2}.
+         *
+         * @return penalty value
+         */
         double getPenalty() {
             return penalty;
         }
 
+        /**
+         * Gets the parent objective function instance.
+         *
+         * @return parent objective function instance
+         */
         public Objective getObjective() {
             return Objective.this;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public String toString() {
             return "RESULT objective function value is " + value + ", constraint values are " +

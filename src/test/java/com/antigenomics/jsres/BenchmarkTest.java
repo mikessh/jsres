@@ -23,7 +23,27 @@ import java.util.Arrays;
 
 import static java.lang.Math.*;
 
+/**
+ * Tests for optimization benchmark functions. Contains some useful examples for using
+ * the library.
+ */
 public class BenchmarkTest {
+    @Test
+    public void g08Test() {
+        // An example of using Objective class. 
+        // Objective problem and constraint statement example itself:
+        testSres(200, new TestProblem(new double[]{0, 0}, new double[]{10, 10}, true, 0.095825) {
+            @Override
+            public Result evaluate(double[] features) {
+                double f = pow(sin(2 * PI * features[0]), 3) * sin(2 * PI * features[1]) /
+                        (features[0] * features[0] * features[0] * (features[0] + features[1])),
+                        g1 = features[0] * features[0] - features[1] + 1,
+                        g2 = 1 - features[0] + (features[1] - 4) * (features[1] - 4);
+                return new Result(f, new double[]{g1, g2});
+            }
+        });
+    }
+
     @Test
     public void bananaTest() {
         testSres(100, new TestProblem(new double[]{-10, -10}, new double[]{10, 10}, false, 0) {
@@ -58,21 +78,8 @@ public class BenchmarkTest {
         });
     }
 
-    @Test
-    public void g08Test() {
-        testSres(200, new TestProblem(new double[]{0, 0}, new double[]{10, 10}, true, 0.095825) {
-            @Override
-            public Result evaluate(double[] features) {
-                double f = pow(sin(2 * PI * features[0]), 3) * sin(2 * PI * features[1]) /
-                        (features[0] * features[0] * features[0] * (features[0] + features[1])),
-                        g1 = features[0] * features[0] - features[1] + 1,
-                        g2 = 1 - features[0] + (features[1] - 4) * (features[1] - 4);
-                return new Result(f, new double[]{g1, g2});
-            }
-        });
-    }
-
     public void testSres(int numberOfGenerations, TestProblem testProblem) {
+        // An example of using SRES class
         SRES sres = new SRES(testProblem);
         SRES.Solution solution = sres.run(numberOfGenerations).getBestSolution();
         System.out.println(solution.toString());
@@ -80,6 +87,9 @@ public class BenchmarkTest {
                 testProblem.isSolved(solution));
     }
 
+    /**
+     * Overrides {@link com.antigenomics.jsres.Objective} to allow result evaluation
+     */
     public static abstract class TestProblem extends Objective {
         private final double valueAtSolution;
         private final double absolutePrecision, relativePrecision;
