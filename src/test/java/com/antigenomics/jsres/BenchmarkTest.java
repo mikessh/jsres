@@ -46,7 +46,7 @@ public class BenchmarkTest {
 
     @Test
     public void bananaTest() {
-        testSres(100, new TestProblem(new double[]{-10, -10}, new double[]{10, 10}, false, 0) {
+        testSres(200, new TestProblem(new double[]{-10, -10}, new double[]{10, 10}, false, 0) {
             @Override
             public Result evaluate(double[] features) {
                 double a = (1 - features[0]), b = 10 * (features[1] - features[0] * features[0]);
@@ -61,8 +61,8 @@ public class BenchmarkTest {
         double[] lowerBounds = new double[N],
                 upperBounds = new double[N];
 
-        Arrays.setAll(lowerBounds, value -> -10);
-        Arrays.setAll(upperBounds, value -> 10);
+        Arrays.setAll(lowerBounds, value -> -3);
+        Arrays.setAll(upperBounds, value -> 3);
 
         testSres(5000, new TestProblem(lowerBounds, upperBounds, false, 0) {
             @Override
