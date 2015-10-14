@@ -1,3 +1,5 @@
+[![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+
 ### Description
 
 A java-based implementation of Stochastic Ranking Evolutionary Strategy (SRES). 
