@@ -16,18 +16,28 @@
 
 package com.antigenomics.jsres;
 
+import java.util.Arrays;
+
 public abstract class Objective {
     private final int numberOfFeatures;
     private final double[] featureLowerBounds, featureUpperBounds;
     private final double[] mutationRates;
+    private final boolean maximizationProblem;
 
-    public Objective(double[] featureUpperBounds, double[] featureLowerBounds) {
+    protected Objective(double[] featureLowerBounds, double[] featureUpperBounds,
+                        boolean maximizationProblem) {
         this.numberOfFeatures = featureLowerBounds.length;
         if (featureUpperBounds.length != numberOfFeatures) {
             throw new IllegalArgumentException("Lengths of upper and lower bounds should match.");
         }
         this.featureLowerBounds = featureLowerBounds;
         this.featureUpperBounds = featureUpperBounds;
+        for (int i = 0; i < numberOfFeatures; i++) {
+            if (featureUpperBounds[i] < featureLowerBounds[i]) {
+                throw new IllegalArgumentException("Feature upper bound is smaller than lower bound for index " + i + ".");
+            }
+        }
+        this.maximizationProblem = maximizationProblem;
 
         this.mutationRates = new double[numberOfFeatures];
         double factor = Math.sqrt(numberOfFeatures);
@@ -62,7 +72,11 @@ public abstract class Objective {
         return numberOfFeatures;
     }
 
-    public static class Result {
+    public boolean isMaximizationProblem() {
+        return maximizationProblem;
+    }
+
+    public class Result {
         private final double value, penalty;
         private final double[] constraintValues;
 
@@ -93,6 +107,16 @@ public abstract class Objective {
 
         double getPenalty() {
             return penalty;
+        }
+
+        public Objective getObjective() {
+            return Objective.this;
+        }
+
+        @Override
+        public String toString() {
+            return "RESULT objective function value is " + value + ", constraint values are " +
+                    Arrays.toString(constraintValues);
         }
     }
 }
